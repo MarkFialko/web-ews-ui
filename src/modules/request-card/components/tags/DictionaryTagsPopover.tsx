@@ -1,29 +1,22 @@
-import { useState, useMemo, useCallback, useRef, useLayoutEffect } from "react";
-
 import {
-  Popover,
-  TextField,
-  Box,
-  Typography,
-  InputAdornment,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  ListItemIcon,
-} from "@mui/material";
+  Fragment,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+  useLayoutEffect,
+} from "react";
 
-import {
-  SearchRounded,
-  ExpandMoreRounded,
-  ExpandLessRounded,
-  Check,
-} from "@mui/icons-material";
+import { Popover, Box, List } from "@mui/material";
 
 import { useGetHashtagsQuery } from "@shared/queries/dictionaryApi";
-import { normalizePrefix } from "../../utils";
+import type { HashtagGroupNode } from "@shared/queries/dictionaryApi";
 
 import { useUser } from "@shared/user";
+
+import { GroupNodeItem } from "./components/GroupNodeItem";
+import { TagsSearchField } from "./components/TagsSearchField";
+import { TagsEmptyState } from "./components/TagsEmptyState";
 
 interface DictionaryTagsPopoverProps {
   tags: string[];
@@ -32,24 +25,46 @@ interface DictionaryTagsPopoverProps {
   onTagSelect: (tag: string) => void;
 }
 
-const SEARCH_INPUT_SX = {
-  mb: 1,
-  "& .MuiOutlinedInput-root": {
-    fontSize: 14,
-  },
-};
+function collectSubtreeIds(node: HashtagGroupNode, ids: Set<number>) {
+  if (node.id !== null) ids.add(node.id);
+  for (const child of node.children) collectSubtreeIds(child, ids);
+}
 
-const LIST_ITEM_GROUP_SX = {
-  fontSize: 13,
-  fontWeight: 600,
-  px: 1.5,
-  py: 0.75,
-  cursor: "pointer",
-  transition: "background-color 0.15s",
-  "&:hover": {
-    backgroundColor: "action.hover",
-  },
-};
+function filterTree(nodes: HashtagGroupNode[], query: string) {
+  const matchedPathIds = new Set<number>();
+
+  const walk = (node: HashtagGroupNode): HashtagGroupNode | null => {
+    // Совпадение по названию группы — показываем её целиком (свои теги +
+    // все подгруппы без доп. фильтрации) и раскрываем всё поддерево.
+    if (node.id !== null && node.name?.toLowerCase().includes(query)) {
+      collectSubtreeIds(node, matchedPathIds);
+      return node;
+    }
+
+    const ownMatches = node.tags.filter((t) => {
+      const title = t.title.toLowerCase();
+      const hashtag = t.hashtag.toLowerCase();
+      return title.includes(query) || hashtag.includes(query);
+    });
+
+    const filteredChildren = node.children
+      .map(walk)
+      .filter((child): child is HashtagGroupNode => child !== null);
+
+    const survives = ownMatches.length > 0 || filteredChildren.length > 0;
+    if (!survives) return null;
+
+    if (node.id !== null) matchedPathIds.add(node.id);
+
+    return { ...node, tags: ownMatches, children: filteredChildren };
+  };
+
+  const filteredNodes = nodes
+    .map(walk)
+    .filter((node): node is HashtagGroupNode => node !== null);
+
+  return { nodes: filteredNodes, matchedPathIds };
+}
 
 export function DictionaryTagsPopover(props: DictionaryTagsPopoverProps) {
   const { anchorEl, onClose, onTagSelect, tags } = props;
@@ -97,24 +112,11 @@ export function DictionaryTagsPopover(props: DictionaryTagsPopoverProps) {
     });
   }, []);
 
-  const filteredGroups = useMemo(() => {
-    if (!search.trim()) return hashtags;
-
-    const q = search.toLowerCase();
-
-    return hashtags
-      .map((g) => ({
-        ...g,
-        group: {
-          ...g.group,
-          tags: g.group.tags.filter((t) => {
-            const title = t.title.toLowerCase();
-            const hashtag = t.hashtag.toLowerCase();
-            return title.includes(q) || hashtag.includes(q);
-          }),
-        },
-      }))
-      .filter((g) => g.group.tags.length > 0);
+  const filteredTree = useMemo(() => {
+    if (!search.trim()) {
+      return { nodes: hashtags, matchedPathIds: new Set<number>() };
+    }
+    return filterTree(hashtags, search.toLowerCase());
   }, [hashtags, search]);
 
   const handleTagClick = useCallback(
@@ -149,115 +151,31 @@ export function DictionaryTagsPopover(props: DictionaryTagsPopoverProps) {
       }}
     >
       <Box sx={{ p: 1.5, flexShrink: 0 }}>
-        <TextField
+        <TagsSearchField
           inputRef={inputRef}
-          size="small"
-          fullWidth
-          placeholder="Поиск по тегам..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start" sx={{ mr: 1 }}>
-                <SearchRounded fontSize="small" color="action" />
-              </InputAdornment>
-            ),
-          }}
-          sx={SEARCH_INPUT_SX}
+          onChange={setSearch}
         />
       </Box>
 
       <Box sx={{ flex: 1, overflow: "auto" }}>
-        {filteredGroups.length === 0 ? (
-          <Typography
-            variant="body1"
-            color="text.secondary"
-            sx={{ textAlign: "center", py: 3 }}
-          >
-            Ничего не найдено
-          </Typography>
+        {filteredTree.nodes.length === 0 ? (
+          <TagsEmptyState />
         ) : (
           <List disablePadding>
-            {filteredGroups.map((groupDto) => {
-              const { group } = groupDto;
-              const isExpanded = expandedGroups.has(group.id);
-
-              return (
-                <>
-                  {group.id !== null && (
-                    <ListItem
-                      key={group.id}
-                      disableGutters
-                      disablePadding
-                      sx={{ px: 0 }}
-                    >
-                      <ListItemButton
-                        disableGutters
-                        sx={LIST_ITEM_GROUP_SX}
-                        onClick={() => handleToggleGroup(group.id)}
-                      >
-                        <ListItemText
-                          primary={group.name}
-                          primaryTypographyProps={{
-                            variant: "body1",
-                            fontWeight: "bold",
-                            noWrap: true,
-                          }}
-                        />
-                        <ListItemIcon
-                          sx={{
-                            minWidth: 28,
-                            mr: 1,
-                            justifyContent: "flex-end",
-                          }}
-                        >
-                          {isExpanded ? (
-                            <ExpandLessRounded fontSize="small" />
-                          ) : (
-                            <ExpandMoreRounded fontSize="small" />
-                          )}
-                        </ListItemIcon>
-                      </ListItemButton>
-                    </ListItem>
-                  )}
-
-                  {(isExpanded || group.id === null) &&
-                    group.tags.map((tag) => {
-                      const prefixed = normalizePrefix(tag.hashtag);
-                      const isSelected = tags.includes(prefixed);
-
-                      return (
-                        <ListItem
-                          key={tag.id}
-                          disableGutters
-                          disablePadding
-                          sx={{ px: 0 }}
-                        >
-                          <ListItemButton
-                            disableGutters
-                            sx={LIST_ITEM_GROUP_SX}
-                            onClick={() => handleTagClick(prefixed)}
-                            title={tag.hint}
-                          >
-                            <ListItemText
-                              primary={`${tag.title} (${prefixed})`}
-                              primaryTypographyProps={{
-                                variant: "body1",
-                                noWrap: true,
-                              }}
-                            />
-                            {isSelected && (
-                              <ListItemIcon sx={{ justifyContent: "flex-end" }}>
-                                <Check />
-                              </ListItemIcon>
-                            )}
-                          </ListItemButton>
-                        </ListItem>
-                      );
-                    })}
-                </>
-              );
-            })}
+            {filteredTree.nodes.map((node) => (
+              <Fragment key={node.id ?? "ungrouped"}>
+                <GroupNodeItem
+                  node={node}
+                  depth={0}
+                  expandedGroups={expandedGroups}
+                  matchedPathIds={filteredTree.matchedPathIds}
+                  selectedTags={tags}
+                  onToggleGroup={handleToggleGroup}
+                  onTagClick={handleTagClick}
+                />
+              </Fragment>
+            ))}
           </List>
         )}
       </Box>

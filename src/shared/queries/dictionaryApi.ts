@@ -24,14 +24,6 @@ interface HashtagDto {
   hint: string;
 }
 
-export interface GroupHashtagDto {
-  group: {
-    id: number;
-    name: string;
-    tags: HashtagDto[];
-  };
-}
-
 export interface DictionaryGroupDto {
   id: number | null;
   name: string | null;
@@ -39,7 +31,19 @@ export interface DictionaryGroupDto {
   tags: HashtagDto[];
 }
 
-type HashtagsResponseDto = GroupHashtagDto[];
+/**
+ * Узел дерева тегов. `id === null` бывает только у единственного
+ * псевдоузла "без группы" (исходная строка с id/parentId/name === null) —
+ * у него всегда `children: []`, его tags показываются без заголовка группы.
+ */
+export interface HashtagGroupNode {
+  id: number | null;
+  name: string | null;
+  tags: HashtagDto[];
+  children: HashtagGroupNode[];
+}
+
+type HashtagsResponseDto = HashtagGroupNode[];
 
 export const dictionaryApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -79,30 +83,43 @@ export const dictionaryApi = baseApi.injectEndpoints({
         };
       },
       transformResponse: (response: DictionaryGroupDto[]) => {
-        const result: HashtagsResponseDto = [];
+        const isUngrouped = (row: DictionaryGroupDto) =>
+          row.id === null && row.parentId === null && row.name === null;
 
-        for (const group of response) {
-          if (group.tags.length > 0 && group.parentId !== null) {
-            result.push({
-              group: {
-                id: group.id!,
-                name: group.name!,
-                tags: group.tags,
-              },
-            });
+        const nodeById = new Map<number, HashtagGroupNode>();
+        let ungrouped: HashtagGroupNode | null = null;
+
+        for (const row of response) {
+          if (isUngrouped(row)) {
+            ungrouped = { id: null, name: null, tags: row.tags, children: [] };
+            continue;
           }
-          if (group.parentId === null) {
-            result.push({
-              group: {
-                id: null,
-                name: "",
-                tags: group.tags,
-              },
-            });
+          if (row.id === null) continue;
+          nodeById.set(row.id, {
+            id: row.id,
+            name: row.name,
+            tags: row.tags,
+            children: [],
+          });
+        }
+
+        const roots: HashtagGroupNode[] = [];
+
+        for (const row of response) {
+          if (isUngrouped(row) || row.id === null) continue;
+
+          const node = nodeById.get(row.id)!;
+          const parent =
+            row.parentId !== null ? nodeById.get(row.parentId) : undefined;
+
+          if (parent) {
+            parent.children.push(node);
+          } else {
+            roots.push(node);
           }
         }
 
-        return result;
+        return ungrouped ? [ungrouped, ...roots] : roots;
       },
     }),
   }),
