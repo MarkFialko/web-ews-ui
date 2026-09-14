@@ -104,7 +104,7 @@ export default function EngineerWorkspace() {
 
   const log = useWorklogLogger();
 
-  const { triageRequests } = useTriageRequests();
+  const { triageRequests, isLoading: isTriageLoading } = useTriageRequests();
   const { user } = useUser();
 
   const chatBump = useChatMessageBump({
@@ -159,6 +159,20 @@ export default function EngineerWorkspace() {
 
     prevWorkspaceModeRef.current = workspaceMode;
   }, [workspaceMode, log]);
+
+  // Если заявки с текущим ticketId нет в triage-списке (устарела ссылка,
+  // заявка недоступна инженеру и т.п.) — возвращаемся к списку заявок,
+  // не дожидаясь вечного скелетона в карточке.
+  useEffect(() => {
+    if (!ticketId || isTriageLoading) return;
+
+    const exists = triageRequests.some(
+      (request) => request.businessId === ticketId,
+    );
+    if (!exists) {
+      closeRequest();
+    }
+  }, [ticketId, isTriageLoading, triageRequests, closeRequest]);
 
   const selectRequest = useCallback(
     (ticketId: string) => {
