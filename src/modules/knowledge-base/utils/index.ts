@@ -1,0 +1,1 @@
+export { openKnowledgeArticle } from "./openKnowledgeArticle";

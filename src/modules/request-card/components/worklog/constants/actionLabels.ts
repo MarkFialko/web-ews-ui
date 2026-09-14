@@ -1,0 +1,28 @@
+import { WORKLOG_ACTIONS, type WorklogAction } from "@shared/worklog-logger";
+
+export const WORKLOG_ACTION_RUS: Record<WorklogAction, string> = {
+  [WORKLOG_ACTIONS.APP_START]: "Запуск EWS",
+  [WORKLOG_ACTIONS.APP_INACTIVE_END]: "EWS был неактивен",
+  [WORKLOG_ACTIONS.LIST_OPEN]: "Открыт большой список запросов",
+  [WORKLOG_ACTIONS.OPEN_TASK]: "Открыт запрос",
+  [WORKLOG_ACTIONS.OPEN_TASK_BIG]: "Предпросмотр в большом списке",
+  [WORKLOG_ACTIONS.TASK_LOCAL]: "Открыта локальная поддержка",
+  [WORKLOG_ACTIONS.TASK_OUT]: "Выход из запроса",
+  [WORKLOG_ACTIONS.TASK_IN_WORK]: "Взять в работу",
+  [WORKLOG_ACTIONS.CLOSE_TASK]: "Закрытие заявки",
+  [WORKLOG_ACTIONS.TASK_REAZON]: "Причина просрочки / код закрытия",
+  [WORKLOG_ACTIONS.WRITE_INFO_DECISION]: "Решение",
+  [WORKLOG_ACTIONS.WRITE_CHAT]: "Запись в чат",
+  [WORKLOG_ACTIONS.WRITE_INFO_PROTOCOL]: "Информация в протокол",
+  [WORKLOG_ACTIONS.WRITE_HASHTAG_DIR]: "Добавление тега из справочника",
+  [WORKLOG_ACTIONS.WRITE_HASHTAG]: "Добавление произвольного тега",
+  [WORKLOG_ACTIONS.DELETE_HASHTAG]: "Удаление тега",
+  [WORKLOG_ACTIONS.CREATE_ZNR]: "Создан ЗНР/ЗПИ",
+  [WORKLOG_ACTIONS.REDIRECT_TASK_ON_GROUP]: "Переназначение на группу",
+  [WORKLOG_ACTIONS.REDIRECT_TASK_ON_USER]: "Переназначение на исполнителя",
+  [WORKLOG_ACTIONS.REDIRECT_TASK_ON_SBS]: "Перевод на локальную поддержку",
+  [WORKLOG_ACTIONS.CALL_DIAL]: "Набран номер",
+  [WORKLOG_ACTIONS.CALL_SUCCESS]: "Успешно дозвонился",
+  [WORKLOG_ACTIONS.NO_CALL]: "Не дозвонился",
+  [WORKLOG_ACTIONS.CALL_LATER]: "Перезвонить позже",
+};

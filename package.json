@@ -1,0 +1,73 @@
+{
+  "name": "vibe-test1",
+  "private": true,
+  "version": "1.5.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.7",
+    "@mui/material": "^7.3.6",
+    "@mui/x-date-pickers": "^7.11.0",
+    "@reduxjs/toolkit": "^2.11.2",
+    "@tanstack/react-virtual": "3.14.9",
+    "dayjs": "^1.11.13",
+    "events": "^3.3.0",
+    "immer": "11.1.8",
+    "lodash": "4.18.1",
+    "lucide-react": "^0.562.0",
+    "msw": "^2.4.3",
+    "notistack": "^3.0.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-hook-form": "^7.69.0",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.14.0",
+    "vite-plugin-zip-pack": "1.2.4",
+    "zod-validation-error": "4.0.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@testing-library/dom": "10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/lodash": "4.17.25",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "eslint-plugin-unused-imports": "4.4.1",
+    "globals": "^16.5.0",
+    "husky": "9.1.7",
+    "jsdom": "^26.1.0",
+    "lint-staged": "16.4.0",
+    "node-fetch": "3.2.5",
+    "prettier": "^3.6.2",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.4",
+    "vite": "5.4.11",
+    "vitest": "^4.0.16"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
+  }
+}

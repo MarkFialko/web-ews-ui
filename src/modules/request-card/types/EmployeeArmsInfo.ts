@@ -1,0 +1,28 @@
+export type EmployeeArmsInfo = {
+  NetBIOSName: string;
+  ARMDomain: string;
+  userName: string;
+  userDomain: string;
+  loginSigma?: string;
+  loginAlpha?: string;
+  loginOmega?: string;
+  sourceSegment: string;
+  model: string;
+  manufacturer: string;
+  OSName: string;
+  OSVersion: string;
+  OSDirectory: string;
+  installDate: string;
+  IPAddress: string;
+  IPRoute: string;
+  MACAddress: string;
+  CPUName: string;
+  serialBios: string;
+  ramVol: string;
+  procFreq: string;
+  hddVol: string;
+  location: string;
+  heartBeatDiscoveryDataRecordDate: string;
+  ou: string;
+  biosPassStat: string;
+};

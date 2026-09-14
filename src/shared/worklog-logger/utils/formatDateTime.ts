@@ -1,0 +1,15 @@
+export function formatDateTime(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  const pad = (n: number, len = 2): string => String(n).padStart(len, "0");
+  return (
+    pad(d.getDate()) +
+    "." +
+    pad(d.getMonth() + 1) +
+    "." +
+    d.getFullYear() +
+    " " +
+    pad(d.getHours()) +
+    ":" +
+    pad(d.getMinutes())
+  );
+}

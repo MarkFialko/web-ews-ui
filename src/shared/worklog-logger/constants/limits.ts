@@ -1,0 +1,5 @@
+export const WORKLOG_MAX_BATCH_SIZE = 50;
+export const WORKLOG_MAX_BATCH_INTERVAL_MS = 30_000;
+export const WORKLOG_MAX_BUFFER_SIZE = 3_000;
+export const WORKLOG_INACTIVITY_THRESHOLD_MS = 60_000;
+export const WORKLOG_STORE_NAME = "worklogEvents";
